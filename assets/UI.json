@@ -1,0 +1,32 @@
+{
+	"renderer": "luxe",
+	"layout": "margins",
+	"canvas": [
+		{
+			"type": "label",
+			"name": "label1",
+			"x": 10, "y": 10,
+			"w": 100, "h": 32,
+			"text": "Hello Mint!",
+			"text_size": 14,
+			"onclick": "clicked.label1"
+		},
+		{
+			"type": "checkbox",
+			"name": "check1",
+			"x": 120, "y": 16,
+			"w": 24, "h": 24
+		},
+		{
+			"type": "progress",
+			"name": "progress1",
+			"progress": 0.2,
+			"options": {
+				"color": "0x000000",
+				"color_bar": "0x121219"
+			},
+			"x": 10, "y": 95,
+			"w": 128, "h": 16
+		}
+	]
+}

@@ -1,0 +1,24 @@
+{
+  project : {
+    name : 'Mint JSON Development',
+    version : '1.0.0-alpha',
+    author : 'Kenton Hamaluik',
+
+    app : {
+      name : 'mint-json-dev',
+      package : 'com.blazingmammothgames.mint.jsondev'
+    },
+
+    build : {
+      dependencies : {
+        luxe : '*',
+        mint : '*'
+      }
+    },
+
+    files : {
+      assets : 'assets/',
+      config : 'config.json',
+    }
+  }
+}
