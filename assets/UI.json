@@ -1,104 +1,92 @@
-{
-	"rendering": "luxe",
-	"layout": "margins",
-	"canvases": [
-		{
-			"canvas": {
-				"x": 10, "y": 10,
-				"w": 960, "h": 640,
-				"children": [
-					{
-						"label": {
-							"name": "label1",
-							"x": 10, "y": 10,
-							"w": 100, "h": 32,
-							"text": "hello mint",
-							"text_size": 14,
-							"onclick": "clicked.label1"
-						}
-					},
-					{
-						"checkbox": {
-							"x": 120, "y": 16,
-							"w": 24, "h": 24
-						}
-					},
-					{
-						"progress": {
-							"x": 10, "y": 95,
-							"w": 128, "h": 16,
-							"progress": 0.2,
-							"options": {
-								"color": "0x000000",
-								"color_bar": "0x121219"
-							}
-						}
-					},
-					{
-						"slider": {
-							"x": 10, "y": 330,
-							"w": 128, "h": 24,
-							"min": 0, "max": 100,
-							"step": 10
-						}
-					},
-					{
-						"window": {
-							"x": 160, "y": 10,
-							"w": 256, "h": 131,
-							"title": "Sample window",
-							"h_max": 131, "h_min": 131,
-							"w_min": 131,
-							"children": [
-								{
-									"image": {
-										"x": 5, "y": 30,
-										"w": 32, "h": 32,
-										"path": "assets/transparency.png"
-									}
-								}
-							]
-						}
-					},
-					{
-						"scroll": {
-							"x": 16, "y": 190,
-							"w": 128, "h": 128,
-							"options": {
-								"color_handles": "0xffffff"
-							},
-							"children": [
-								{
-									"image": {
-										"x": 0, "y": 0,
-										"w": 512, "h": 512,
-										"path": "assets/image.png"
-									}
-								}
-							]
-						}
-					},
-					{
-						"button": {
-							"name": "o button",
-							"text": "O",
-							"x": 76, "y": 52,
-							"w": 32, "h": 32,
-							"options": {
-								"color_hover": "0xf6007b"
-							},
-							"text_size": 16,
-							"onclick": "obutton.click"
-						}
-					},
-					{
-						"panel": {
-							"x": 84, "y": 120,
-							"w": 64, "h": 64
-						}
-					}
-				]
+[
+	{
+		"label": {
+			"name": "label1",
+			"x": 10, "y": 10,
+			"w": 100, "h": 32,
+			"text": "hello mint",
+			"text_size": 14,
+			"onclick": "Clicked label 1!"
+		}
+	},
+	{
+		"checkbox": {
+			"x": 120, "y": 16,
+			"w": 24, "h": 24
+		}
+	},
+	{
+		"progress": {
+			"x": 10, "y": 95,
+			"w": 128, "h": 16,
+			"progress": 0.2,
+			"options": {
+				"color": "0x000000",
+				"color_bar": "0x121219"
 			}
 		}
-	]
-}
+	},
+	{
+		"slider": {
+			"x": 10, "y": 330,
+			"w": 128, "h": 24,
+			"min": 0, "max": 100,
+			"step": 10
+		}
+	},
+	{
+		"window": {
+			"x": 160, "y": 10,
+			"w": 256, "h": 131,
+			"title": "Sample window",
+			"h_max": 131, "h_min": 131,
+			"w_min": 131,
+			"children": [
+				{
+					"image": {
+						"x": 5, "y": 30,
+						"w": 32, "h": 32,
+						"path": "assets/transparency.png"
+					}
+				}
+			]
+		}
+	},
+	{
+		"scroll": {
+			"x": 16, "y": 190,
+			"w": 128, "h": 128,
+			"options": {
+				"color_handles": "0xffffff"
+			},
+			"children": [
+				{
+					"image": {
+						"x": 0, "y": 0,
+						"w": 512, "h": 512,
+						"path": "assets/image.png"
+					}
+				}
+			]
+		}
+	},
+	{
+		"button": {
+			"name": "o button",
+			"text": "O",
+			"x": 76, "y": 52,
+			"w": 32, "h": 32,
+			"options": {
+				"color_hover": "0xf6007b"
+			},
+			"text_size": 16,
+			"onclick": "Clicked the O button!"
+		}
+	},
+	{
+		"panel": {
+			"x": 84, "y": 120,
+			"w": 64, "h": 64
+		}
+	}
+]

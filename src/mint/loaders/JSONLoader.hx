@@ -14,26 +14,24 @@ import mint.types.Types.MouseEvent;
 
 using StringTools;
 
-class JSONLoaderException {
-	public var message:String;
-	
-	public function new(message:String) {
-		this.message = message;
-	}
-}
+// called when the parser hits a control it doesn't know about
+// gives the type and its supplied options as parameters, expects a constructed control back
+typedef Callback_UnknownControl = String->Dynamic->Control;
+
+// called when the parser hits a control with a missing mandatory field
+// gives the control name, control type and field name as parameters, expects the value of the field back
+typedef Callback_MissingField = String->String->String->Dynamic;
+
+// called when the parser hits a control with a "onclick" or "onchange" interaction
+// gives the control and JSON value provided
+typedef Callback_ControlInteraction = Control->Dynamic->Void;
 
 class JSONLoader {
-	public var canvases:Array<Canvas> = new Array<Canvas>();
-	public var rendering:Rendering;
-	public var layout:mint.layout.margins.Margins; // TODO: generic layout interface?
-	
-	public var controls:StringMap<Control> = new StringMap<Control>();
-	
 	// utility to take care of unnamed controls
 	// will assign control names based on their type and the number of that control
 	// in a specific type
-	private var unnamedControlIndices:StringMap<Int> = new StringMap<Int>();
-	private function GetUnnamedControlIndex(type:String):String {
+	private static var unnamedControlIndices:StringMap<Int> = new StringMap<Int>();
+	private static function GetUnnamedControlIndex(type:String):String {
 		var ret:String = "x";
 		if(unnamedControlIndices.exists(type)) {
 			var i:Int = unnamedControlIndices.get(type);
@@ -47,41 +45,18 @@ class JSONLoader {
 		return ret;
 	} // GetUnnamedControlIndex
 	
-	public function new(?jsonString:String, ?jsonObject:Dynamic) {
-		if(jsonString != null) {
-			FromJSONString(jsonString);
-		}
-		else if(jsonObject != null) {
-			FromJSONObject(jsonObject);
-		}
-	} // new
+	private function new() {}
 	
-	public function FromJSONString(JSON:String) {
-		FromJSONObject(haxe.Json.parse(JSON));
-	} // FromJSONString
-	
-	public function FromJSONObject(JSON:Dynamic) {
-		// initialize mint
-		rendering = switch(JSON.rendering) {
-			case 'luxe': new mint.render.luxe.LuxeMintRender();
-			default: throw new JSONLoaderException("Unknown rendering '" + JSON.rendering + "'!");
-		}
+	public static function Load(json:Dynamic, parent:Control,
+	                            ?rendering:mint.render.Rendering,
+	                            ?OnUnknownControl:Callback_UnknownControl, ?OnMissingField:Callback_MissingField,
+	                            ?OnClick:Callback_ControlInteraction, ?OnChange:Callback_ControlInteraction):Array<Control> {
+		var loadedControls:Array<Control> = new Array<Control>();
 		
-		layout = switch(JSON.layout) {
-			case 'margins': new mint.layout.margins.Margins();
-			default: throw new JSONLoaderException("Unknown layout engine '" + JSON.layout + "'!");
-		}
-		
-		// recursively load everything
-		if(JSON.canvases == null) throw new JSONLoader("No canvases are defined!");
-		LoadControls(JSON.canvases, null, "");
-	} // FromJSONObject
-	
-	private function LoadControls(root:Dynamic, parent:Control, tabLevel:String):Void {
-		var children:Array<String> = Reflect.fields(root);
+		var children:Array<String> = Reflect.fields(json);
 		for(c in children) {
 			// get the actual object
-			var wrapper = Reflect.field(root, c);
+			var wrapper = Reflect.field(json, c);
 			
 			// figure out what type it is
 			var controlType:String = Std.string(Reflect.fields(wrapper)[0]);
@@ -109,55 +84,46 @@ class JSONLoader {
 			
 			// load it (with its options)
 			var loadedControl = switch(controlType.toLowerCase()) {
-				case 'button': new mint.Button(TranslateControlOptions(options, { text: '' }));
-				case 'canvas': new mint.Canvas(TranslateControlOptions(options, {}));
-				case 'checkbox': new mint.Checkbox(TranslateControlOptions(options, {}));
-				case 'dropdown': new mint.Dropdown(TranslateControlOptions(options, { text: '' }));
-				case 'image': new mint.Image(TranslateControlOptions(options, { path: '' }));
-				case 'label': new mint.Label(TranslateControlOptions(options, { text: '' }));
-				case 'list': new mint.List(TranslateControlOptions(options, {}));
-				case 'panel': new mint.Panel(TranslateControlOptions(options, {}));
-				case 'progress': new mint.Progress(TranslateControlOptions(options, {}));
-				case 'scroll': new mint.Scroll(TranslateControlOptions(options, {}));
-				case 'slider': new mint.Slider(TranslateControlOptions(options, {}));
-				case 'textedit': new mint.TextEdit(TranslateControlOptions(options, {}));
-				case 'window': new mint.Window(TranslateControlOptions(options, {}));
-				default: throw new JSONLoaderException("Unknown control type '" + controlType + "'!");
+				case 'button': new mint.Button(TranslateOptions(options, { text: '' }, '', OnMissingField, OnClick, OnChange));
+				case 'canvas': new mint.Canvas(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				case 'checkbox': new mint.Checkbox(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				case 'dropdown': new mint.Dropdown(TranslateOptions(options, { text: '' }, '', OnMissingField, OnClick, OnChange));
+				case 'image': new mint.Image(TranslateOptions(options, { path: '' }, '', OnMissingField, OnClick, OnChange));
+				case 'label': new mint.Label(TranslateOptions(options, { text: '' }, '', OnMissingField, OnClick, OnChange));
+				case 'list': new mint.List(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				case 'panel': new mint.Panel(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				case 'progress': new mint.Progress(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				case 'scroll': new mint.Scroll(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				case 'slider': new mint.Slider(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				case 'textedit': new mint.TextEdit(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				case 'window': new mint.Window(TranslateOptions(options, {}, '', OnMissingField, OnClick, OnChange));
+				default: if(OnUnknownControl != null) OnUnknownControl(controlType, options); else null;
 			};
-			controls.set(controlName, loadedControl);
-			
-			// debug message
-			trace("Loaded " + tabLevel + controlType + ": '" + controlName + "'!");
+			if(loadedControl != null) loadedControls.push(loadedControl);
 			
 			// recurse!
 			if(grandChildren != null) {
-				LoadControls(grandChildren, loadedControl, tabLevel + "  ");
-			}
-			
-			// if we loaded a canvas, record it for event processing
-			if(controlType == 'canvas') {
-				canvases.push(cast(loadedControl, Canvas));
+				var loadedChildren:Array<Control> = Load(grandChildren, loadedControl);
+				loadedControls = loadedControls.concat(loadedChildren);
 			}
 		}
-	} // LoadControls
+		
+		return loadedControls;
+	} // Load
 	
-	private function TranslateControlOptions<T>(options:Dynamic, typeOptions:T):T {
+	private static function TranslateOptions<T>(options:Dynamic, typeOptions:T,
+	                                            controlType:String,
+	                                            ?OnMissingField:Callback_MissingField,
+	                                            ?OnClick:Callback_ControlInteraction, ?OnChange:Callback_ControlInteraction):T {
 		// make sure the user provided the correct options!
 		var fieldNames:Array<String> = Reflect.fields(typeOptions);
 		for(mandatoryField in fieldNames) {
 			var suppliedValue = Reflect.field(options, mandatoryField);
 			if(suppliedValue == null) {
-				throw new JSONLoaderException("Control '" + options.name + "' requires a '" + mandatoryField + "' field!");
+				Reflect.setField(typeOptions, mandatoryField, OnMissingField(options.name, controlType, mandatoryField));
 			}
 		}
 		
-		// inject the options
-		TranslateOptions(options, typeOptions);
-		
-		return typeOptions;
-	} // TranslateControlOptions
-	
-	private function TranslateOptions<T>(options:Dynamic, translatedOptions:T) {
 		// loop through all the specified options
 		// and set them in the strongly-typed version
 		var optionNames:Array<String> = Reflect.fields(options);
@@ -166,55 +132,57 @@ class JSONLoader {
 			
 			// deal with special items
 			switch(optionName) {
-				case 'align': Reflect.setField(translatedOptions, optionName, TranslateTextAlign(val));
-				case 'align_vertical': Reflect.setField(translatedOptions, optionName, TranslateTextAlign(val));
+				case 'align': Reflect.setField(typeOptions, optionName, TranslateTextAlign(val));
+				case 'align_vertical': Reflect.setField(typeOptions, optionName, TranslateTextAlign(val));
 				
-				case 'onclick': Reflect.setField(translatedOptions, optionName, function(event:MouseEvent, control:Control):Void {
-						Luxe.events.fire(val);
-					});
+				case 'onclick': {
+					if(OnClick != null) {
+						Reflect.setField(typeOptions, optionName, function(event:MouseEvent, control:Control):Void {
+							OnClick(control, val);
+						});
+					}
+				}
 				
-				case 'onchange': Reflect.setField(translatedOptions, optionName, function(b:Bool, b:Bool):Void {
-						Luxe.events.fire(val);
-					});
+				case 'onchange': {
+					if(OnChange != null) {
+						Reflect.setField(typeOptions, optionName, function(event:MouseEvent, control:Control):Void {
+							OnChange(control, val);
+						});
+					}
+				}
 				
 				case 'options': {
 					var too:Dynamic = {};
-					TranslateOptions(options.options, too);
-					Reflect.setField(translatedOptions, optionName, too);
+					TranslateOptions(options.options, too, '', OnMissingField, OnClick, OnChange);
+					Reflect.setField(typeOptions, optionName, too);
 				}
 				
 				// skip the "children" field in this function
 				case 'children': continue;
 				
-				// we only have a single renderer for now anyway
-				case 'rendering': {
-					if(options.rendering != rendering)
-						throw new JSONLoaderException("Defining different rendering isn't supported in JSON loading yet!");
-					Reflect.setField(translatedOptions, optionName, val);
-				}
-				
 				default: {
 					if(optionName.startsWith("color")) {
 						// translate colours
-						Reflect.setField(translatedOptions, optionName, new luxe.Color().rgb(Std.parseInt(val)));
+						Reflect.setField(typeOptions, optionName, new luxe.Color().rgb(Std.parseInt(val)));
 					}
 					else {
-						Reflect.setField(translatedOptions, optionName, val);
+						Reflect.setField(typeOptions, optionName, val);
 					}
 				}
 			}
 		}
+		
+		return typeOptions;
 	} // TranslateOptions
 	
-	private function TranslateTextAlign(align:String):mint.types.Types.TextAlign {
+	private static function TranslateTextAlign(align:String):mint.types.Types.TextAlign {
 		return switch(align) {
-			case 'unknown': mint.types.Types.TextAlign.unknown;
 			case 'left': mint.types.Types.TextAlign.left;
 			case 'right': mint.types.Types.TextAlign.right;
 			case 'center': mint.types.Types.TextAlign.left;
 			case 'top': mint.types.Types.TextAlign.top;
 			case 'bottom': mint.types.Types.TextAlign.bottom;
-			default: throw new JSONLoaderException("Unknown text align '" + align + "'!");
+			default: mint.types.Types.TextAlign.unknown;
 		}
 	} // TranslateTextAlign
 }

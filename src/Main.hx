@@ -5,7 +5,7 @@ import luxe.Text;
 
 import mint.Canvas;
 import mint.loaders.JSONLoader;
-import mint.loaders.JSONLoader.JSONLoaderException;
+import mint.render.luxe.LuxeMintRender;
 import mint.render.Rendering;
 import mint.types.Types;
 import mint.Control;
@@ -14,7 +14,11 @@ import mint.render.luxe.Convert;
 import mint.layout.margins.Margins;
 
 class Main extends luxe.Game {
-    var uiLoader:JSONLoader = new JSONLoader();
+    var rendering:LuxeMintRender;
+    var layout:Margins;
+    var canvas:Canvas;
+    
+    var controls:Array<Control>;
 
     override function config(config:luxe.AppConfig) {
         // load the images
@@ -31,49 +35,62 @@ class Main extends luxe.Game {
         // set up the background
         Luxe.renderer.clear_color.rgb(0x161619);
         new luxe.Sprite({ texture:Luxe.resources.texture('assets/960.png'), centered: false, depth: -1 });
+        
+        // set up mint
+        rendering = new LuxeMintRender();
+        layout = new Margins();
+        
+        // create a canvas
+        canvas = new Canvas({
+            x: 0, y: 0, w: 960, h: 640,
+            rendering: rendering
+        });
 
-        // load the UI
-        try {
-            uiLoader.FromJSONObject(Luxe.resources.json('assets/UI.json').asset.json);
-        }
-        catch(exception:JSONLoaderException) {
-            trace("ERROR: " + exception.message);
-        }
+        // load a UI into the canvas
+        controls = JSONLoader.Load(Luxe.resources.json('assets/UI.json').asset.json, canvas,
+                                   function(name:String, type:String, field:String):Dynamic {
+                                        throw "Error! " + name + " (" + type + ") is missing field '" + field + "'!";
+                                        return null;
+                                   },
+                                   function(c:Control, m:String):Void {
+                                        trace(m);
+                                   });
+        
     } // ready
 
     override function onmousemove(e) {
-        for(canvas in uiLoader.canvases) canvas.mousemove(Convert.mouse_event(e));
+        if(canvas != null) canvas.mousemove(Convert.mouse_event(e));
     } // onmousemove
 
     override function onmousewheel(e) {
-       for(canvas in uiLoader.canvases) canvas.mousewheel(Convert.mouse_event(e));
+       if(canvas != null) canvas.mousewheel(Convert.mouse_event(e));
     } // onmousewheel
 
     override function onmouseup(e) {
-       for(canvas in uiLoader.canvases) canvas.mouseup(Convert.mouse_event(e));
+       if(canvas != null) canvas.mouseup(Convert.mouse_event(e));
     } // onmouseup
 
     override function onmousedown(e) {
-       for(canvas in uiLoader.canvases) canvas.mousedown(Convert.mouse_event(e));
+       if(canvas != null) canvas.mousedown(Convert.mouse_event(e));
     } // onmousedown
 
     override function onkeydown(e:luxe.Input.KeyEvent) {
-       for(canvas in uiLoader.canvases) canvas.keydown(Convert.key_event(e));
+       if(canvas != null) canvas.keydown(Convert.key_event(e));
     } // onkeydown
 
     override function ontextinput(e:luxe.Input.TextEvent) {
-       for(canvas in uiLoader.canvases) canvas.textinput(Convert.text_event(e));
+       if(canvas != null) canvas.textinput(Convert.text_event(e));
     } // ontextinput
 
     override function onkeyup(e:luxe.Input.KeyEvent) {
-       for(canvas in uiLoader.canvases) canvas.keyup(Convert.key_event(e));
+       if(canvas != null) canvas.keyup(Convert.key_event(e));
     } // onkeyup
 
     override function onrender() {
-       for(canvas in uiLoader.canvases) canvas.render();
+       if(canvas != null) canvas.render();
     } // onrender
 
     override function update(dt:Float) {
-       for(canvas in uiLoader.canvases) canvas.update(dt);
+       if(canvas != null) canvas.update(dt);
     } // update
 } //Main
