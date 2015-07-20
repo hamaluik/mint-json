@@ -425,7 +425,6 @@ luxe_Game.prototype = $extend(luxe_Emitter.prototype,{
 	,__class__: luxe_Game
 });
 var Main = function() {
-	this.uiLoader = new mint_loaders_JSONLoader();
 	luxe_Game.call(this);
 };
 $hxClasses["Main"] = Main;
@@ -442,95 +441,42 @@ Main.prototype = $extend(luxe_Game.prototype,{
 	,ready: function() {
 		Luxe.renderer.clear_color.rgb(1447449);
 		new luxe_Sprite({ texture : Luxe.resources.cache.get("assets/960.png"), centered : false, depth : -1});
-		try {
-			this.uiLoader.FromJSONObject(Luxe.resources.cache.get("assets/UI.json").asset.json);
-		} catch( exception ) {
-			if (exception instanceof js__$Boot_HaxeError) exception = exception.val;
-			if( js_Boot.__instanceof(exception,mint_loaders_JSONLoaderException) ) {
-				haxe_Log.trace("ERROR: " + exception.message,{ fileName : "Main.hx", lineNumber : 40, className : "Main", methodName : "ready"});
-			} else throw(exception);
-		}
+		this.rendering = new mint_render_luxe_LuxeMintRender();
+		this.layout = new mint_layout_margins_Margins();
+		this.canvas = new mint_Canvas({ x : 0, y : 0, w : 960, h : 640, rendering : this.rendering});
+		this.controls = mint_loaders_JSONLoader.Load(Luxe.resources.cache.get("assets/UI.json").asset.json,this.canvas,null,null,function(name,type,field) {
+			throw new js__$Boot_HaxeError("Error! " + name + " (" + type + ") is missing field '" + field + "'!");
+			return null;
+		},function(c,m) {
+			haxe_Log.trace(m,{ fileName : "Main.hx", lineNumber : 56, className : "Main", methodName : "ready"});
+		});
 	}
 	,onmousemove: function(e) {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.mousemove(mint_render_luxe_Convert.mouse_event(e));
-		}
+		if(this.canvas != null) this.canvas.mousemove(mint_render_luxe_Convert.mouse_event(e));
 	}
 	,onmousewheel: function(e) {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.mousewheel(mint_render_luxe_Convert.mouse_event(e));
-		}
+		if(this.canvas != null) this.canvas.mousewheel(mint_render_luxe_Convert.mouse_event(e));
 	}
 	,onmouseup: function(e) {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.mouseup(mint_render_luxe_Convert.mouse_event(e));
-		}
+		if(this.canvas != null) this.canvas.mouseup(mint_render_luxe_Convert.mouse_event(e));
 	}
 	,onmousedown: function(e) {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.mousedown(mint_render_luxe_Convert.mouse_event(e));
-		}
+		if(this.canvas != null) this.canvas.mousedown(mint_render_luxe_Convert.mouse_event(e));
 	}
 	,onkeydown: function(e) {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.keydown(mint_render_luxe_Convert.key_event(e));
-		}
+		if(this.canvas != null) this.canvas.keydown(mint_render_luxe_Convert.key_event(e));
 	}
 	,ontextinput: function(e) {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.textinput(mint_render_luxe_Convert.text_event(e));
-		}
+		if(this.canvas != null) this.canvas.textinput(mint_render_luxe_Convert.text_event(e));
 	}
 	,onkeyup: function(e) {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.keyup(mint_render_luxe_Convert.key_event(e));
-		}
+		if(this.canvas != null) this.canvas.keyup(mint_render_luxe_Convert.key_event(e));
 	}
 	,onrender: function() {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.render();
-		}
+		if(this.canvas != null) this.canvas.render();
 	}
 	,update: function(dt) {
-		var _g = 0;
-		var _g1 = this.uiLoader.canvases;
-		while(_g < _g1.length) {
-			var canvas = _g1[_g];
-			++_g;
-			canvas.update(dt);
-		}
+		if(this.canvas != null) this.canvas.update(dt);
 	}
 	,__class__: Main
 });
@@ -13224,202 +13170,161 @@ mint_layout_margins_Margins.prototype = {
 	}
 	,__class__: mint_layout_margins_Margins
 };
-var mint_loaders_JSONLoaderException = function(message) {
-	this.message = message;
-};
-$hxClasses["mint.loaders.JSONLoaderException"] = mint_loaders_JSONLoaderException;
-mint_loaders_JSONLoaderException.__name__ = ["mint","loaders","JSONLoaderException"];
-mint_loaders_JSONLoaderException.prototype = {
-	__class__: mint_loaders_JSONLoaderException
-};
-var mint_loaders_JSONLoader = function(jsonString,jsonObject) {
-	this.unnamedControlIndices = new haxe_ds_StringMap();
-	this.controls = new haxe_ds_StringMap();
-	this.canvases = [];
-	if(jsonString != null) this.FromJSONString(jsonString); else if(jsonObject != null) this.FromJSONObject(jsonObject);
+var mint_loaders_JSONLoader = function() {
 };
 $hxClasses["mint.loaders.JSONLoader"] = mint_loaders_JSONLoader;
 mint_loaders_JSONLoader.__name__ = ["mint","loaders","JSONLoader"];
-mint_loaders_JSONLoader.prototype = {
-	GetUnnamedControlIndex: function(type) {
-		var ret = "x";
-		if(this.unnamedControlIndices.exists(type)) {
-			var i = this.unnamedControlIndices.get(type);
-			if(i == null) ret = "null"; else ret = "" + i;
-			this.unnamedControlIndices.set(type,i + 1);
-		} else {
-			this.unnamedControlIndices.set(type,0);
-			ret = "0";
-		}
-		return ret;
+mint_loaders_JSONLoader.GetUnnamedControlIndex = function(type) {
+	var ret = "x";
+	if(mint_loaders_JSONLoader.unnamedControlIndices.exists(type)) {
+		var i = mint_loaders_JSONLoader.unnamedControlIndices.get(type);
+		if(i == null) ret = "null"; else ret = "" + i;
+		mint_loaders_JSONLoader.unnamedControlIndices.set(type,i + 1);
+	} else {
+		mint_loaders_JSONLoader.unnamedControlIndices.set(type,0);
+		ret = "0";
 	}
-	,FromJSONString: function(JSON) {
-		this.FromJSONObject(JSON.parse(JSON));
-	}
-	,FromJSONObject: function(JSON) {
-		var _g = JSON.rendering;
-		switch(_g) {
-		case "luxe":
-			this.rendering = new mint_render_luxe_LuxeMintRender();
-			break;
-		default:
-			throw new js__$Boot_HaxeError(new mint_loaders_JSONLoaderException("Unknown rendering '" + Std.string(JSON.rendering) + "'!"));
+	return ret;
+};
+mint_loaders_JSONLoader.Load = function(json,parent,rendering,OnUnknownControl,OnMissingField,OnClick,OnChange) {
+	var loadedControls = [];
+	var children = Reflect.fields(json);
+	var _g = 0;
+	while(_g < children.length) {
+		var c = children[_g];
+		++_g;
+		var wrapper = Reflect.field(json,c);
+		var controlType = Std.string(Reflect.fields(wrapper)[0]);
+		var options = Reflect.field(wrapper,controlType);
+		var grandChildren = options.children;
+		var controlName = options.name;
+		if(controlName == null) {
+			controlName = controlType + "." + mint_loaders_JSONLoader.GetUnnamedControlIndex(controlType);
+			options.name = controlName;
 		}
-		var _g1 = JSON.layout;
+		options.parent = parent;
+		options.rendering = rendering;
+		var loadedControl;
+		var _g1 = controlType.toLowerCase();
 		switch(_g1) {
-		case "margins":
-			this.layout = new mint_layout_margins_Margins();
+		case "button":
+			loadedControl = new mint_Button(mint_loaders_JSONLoader.TranslateOptions(options,{ text : ""},"",OnMissingField,OnClick,OnChange));
+			break;
+		case "canvas":
+			loadedControl = new mint_Canvas(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
+			break;
+		case "checkbox":
+			loadedControl = new mint_Checkbox(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
+			break;
+		case "dropdown":
+			loadedControl = new mint_Dropdown(mint_loaders_JSONLoader.TranslateOptions(options,{ text : ""},"",OnMissingField,OnClick,OnChange));
+			break;
+		case "image":
+			loadedControl = new mint_Image(mint_loaders_JSONLoader.TranslateOptions(options,{ path : ""},"",OnMissingField,OnClick,OnChange));
+			break;
+		case "label":
+			loadedControl = new mint_Label(mint_loaders_JSONLoader.TranslateOptions(options,{ text : ""},"",OnMissingField,OnClick,OnChange));
+			break;
+		case "list":
+			loadedControl = new mint_List(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
+			break;
+		case "panel":
+			loadedControl = new mint_Panel(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
+			break;
+		case "progress":
+			loadedControl = new mint_Progress(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
+			break;
+		case "scroll":
+			loadedControl = new mint_Scroll(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
+			break;
+		case "slider":
+			loadedControl = new mint_Slider(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
+			break;
+		case "textedit":
+			loadedControl = new mint_TextEdit(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
+			break;
+		case "window":
+			loadedControl = new mint_Window(mint_loaders_JSONLoader.TranslateOptions(options,{ },"",OnMissingField,OnClick,OnChange));
 			break;
 		default:
-			throw new js__$Boot_HaxeError(new mint_loaders_JSONLoaderException("Unknown layout engine '" + Std.string(JSON.layout) + "'!"));
+			if(OnUnknownControl != null) loadedControl = OnUnknownControl(controlType,options); else loadedControl = null;
 		}
-		if(JSON.canvases == null) throw new js__$Boot_HaxeError(new mint_loaders_JSONLoader("No canvases are defined!"));
-		this.LoadControls(JSON.canvases,null,"");
-	}
-	,LoadControls: function(root,parent,tabLevel) {
-		var children = Reflect.fields(root);
-		var _g = 0;
-		while(_g < children.length) {
-			var c = children[_g];
-			++_g;
-			var wrapper = Reflect.field(root,c);
-			var controlType = Std.string(Reflect.fields(wrapper)[0]);
-			var options = Reflect.field(wrapper,controlType);
-			var grandChildren = options.children;
-			var controlName = options.name;
-			if(controlName == null) {
-				controlName = controlType + "." + this.GetUnnamedControlIndex(controlType);
-				options.name = controlName;
-			}
-			options.parent = parent;
-			options.rendering = this.rendering;
-			var loadedControl;
-			var _g1 = controlType.toLowerCase();
-			switch(_g1) {
-			case "button":
-				loadedControl = new mint_Button(this.TranslateControlOptions(options,{ text : ""}));
-				break;
-			case "canvas":
-				loadedControl = new mint_Canvas(this.TranslateControlOptions(options,{ }));
-				break;
-			case "checkbox":
-				loadedControl = new mint_Checkbox(this.TranslateControlOptions(options,{ }));
-				break;
-			case "dropdown":
-				loadedControl = new mint_Dropdown(this.TranslateControlOptions(options,{ text : ""}));
-				break;
-			case "image":
-				loadedControl = new mint_Image(this.TranslateControlOptions(options,{ path : ""}));
-				break;
-			case "label":
-				loadedControl = new mint_Label(this.TranslateControlOptions(options,{ text : ""}));
-				break;
-			case "list":
-				loadedControl = new mint_List(this.TranslateControlOptions(options,{ }));
-				break;
-			case "panel":
-				loadedControl = new mint_Panel(this.TranslateControlOptions(options,{ }));
-				break;
-			case "progress":
-				loadedControl = new mint_Progress(this.TranslateControlOptions(options,{ }));
-				break;
-			case "scroll":
-				loadedControl = new mint_Scroll(this.TranslateControlOptions(options,{ }));
-				break;
-			case "slider":
-				loadedControl = new mint_Slider(this.TranslateControlOptions(options,{ }));
-				break;
-			case "textedit":
-				loadedControl = new mint_TextEdit(this.TranslateControlOptions(options,{ }));
-				break;
-			case "window":
-				loadedControl = new mint_Window(this.TranslateControlOptions(options,{ }));
-				break;
-			default:
-				throw new js__$Boot_HaxeError(new mint_loaders_JSONLoaderException("Unknown control type '" + controlType + "'!"));
-			}
-			this.controls.set(controlName,loadedControl);
-			haxe_Log.trace("Loaded " + tabLevel + controlType + ": '" + controlName + "'!",{ fileName : "JSONLoader.hx", lineNumber : 130, className : "mint.loaders.JSONLoader", methodName : "LoadControls"});
-			if(grandChildren != null) this.LoadControls(grandChildren,loadedControl,tabLevel + "  ");
-			if(controlType == "canvas") this.canvases.push(js_Boot.__cast(loadedControl , mint_Canvas));
+		if(loadedControl != null) loadedControls.push(loadedControl);
+		if(grandChildren != null) {
+			var loadedChildren = mint_loaders_JSONLoader.Load(grandChildren,loadedControl);
+			loadedControls = loadedControls.concat(loadedChildren);
 		}
 	}
-	,TranslateControlOptions: function(options,typeOptions) {
-		var fieldNames = Reflect.fields(typeOptions);
-		var _g = 0;
-		while(_g < fieldNames.length) {
-			var mandatoryField = fieldNames[_g];
-			++_g;
-			var suppliedValue = Reflect.field(options,mandatoryField);
-			if(suppliedValue == null) throw new js__$Boot_HaxeError(new mint_loaders_JSONLoaderException("Control '" + Std.string(options.name) + "' requires a '" + mandatoryField + "' field!"));
-		}
-		this.TranslateOptions(options,typeOptions);
-		return typeOptions;
+	return loadedControls;
+};
+mint_loaders_JSONLoader.TranslateOptions = function(options,typeOptions,controlType,OnMissingField,OnClick,OnChange) {
+	var fieldNames = Reflect.fields(typeOptions);
+	var _g = 0;
+	while(_g < fieldNames.length) {
+		var mandatoryField = fieldNames[_g];
+		++_g;
+		var suppliedValue = Reflect.field(options,mandatoryField);
+		if(suppliedValue == null) Reflect.setField(typeOptions,mandatoryField,OnMissingField(options.name,controlType,mandatoryField));
 	}
-	,TranslateOptions: function(options,translatedOptions) {
-		var optionNames = Reflect.fields(options);
-		var _g = 0;
-		while(_g < optionNames.length) {
-			var optionName = optionNames[_g];
-			++_g;
-			var val = [Reflect.field(options,optionName)];
-			switch(optionName) {
-			case "align":
-				Reflect.setField(translatedOptions,optionName,this.TranslateTextAlign(val[0]));
-				break;
-			case "align_vertical":
-				Reflect.setField(translatedOptions,optionName,this.TranslateTextAlign(val[0]));
-				break;
-			case "onclick":
-				translatedOptions[optionName] = (function(val) {
-					return function(event,control) {
-						Luxe.events.fire(val[0]);
-					};
-				})(val);
-				break;
-			case "onchange":
-				translatedOptions[optionName] = (function(val) {
-					return function(b,b1) {
-						Luxe.events.fire(val[0]);
-					};
-				})(val);
-				break;
-			case "options":
-				var too = { };
-				this.TranslateOptions(options.options,too);
-				translatedOptions[optionName] = too;
-				break;
-			case "children":
-				continue;
-				break;
-			case "rendering":
-				if(options.rendering != this.rendering) throw new js__$Boot_HaxeError(new mint_loaders_JSONLoaderException("Defining different rendering isn't supported in JSON loading yet!"));
-				translatedOptions[optionName] = val[0];
-				break;
-			default:
-				if(StringTools.startsWith(optionName,"color")) Reflect.setField(translatedOptions,optionName,new phoenix_Color().rgb(Std.parseInt(val[0]))); else translatedOptions[optionName] = val[0];
-			}
-		}
-	}
-	,TranslateTextAlign: function(align) {
-		switch(align) {
-		case "unknown":
-			return 0;
-		case "left":
-			return 1;
-		case "right":
-			return 2;
-		case "center":
-			return 1;
-		case "top":
-			return 4;
-		case "bottom":
-			return 5;
+	var optionNames = Reflect.fields(options);
+	var _g1 = 0;
+	while(_g1 < optionNames.length) {
+		var optionName = optionNames[_g1];
+		++_g1;
+		var val = [Reflect.field(options,optionName)];
+		switch(optionName) {
+		case "align":
+			Reflect.setField(typeOptions,optionName,mint_loaders_JSONLoader.TranslateTextAlign(val[0]));
+			break;
+		case "align_vertical":
+			Reflect.setField(typeOptions,optionName,mint_loaders_JSONLoader.TranslateTextAlign(val[0]));
+			break;
+		case "onclick":
+			if(OnClick != null) typeOptions[optionName] = (function(val) {
+				return function(event,control) {
+					OnClick(control,val[0]);
+				};
+			})(val);
+			break;
+		case "onchange":
+			if(OnChange != null) typeOptions[optionName] = (function(val) {
+				return function(event1,control1) {
+					OnChange(control1,val[0]);
+				};
+			})(val);
+			break;
+		case "options":
+			var too = { };
+			mint_loaders_JSONLoader.TranslateOptions(options.options,too,"",OnMissingField,OnClick,OnChange);
+			typeOptions[optionName] = too;
+			break;
+		case "children":
+			continue;
+			break;
 		default:
-			throw new js__$Boot_HaxeError(new mint_loaders_JSONLoaderException("Unknown text align '" + align + "'!"));
+			if(StringTools.startsWith(optionName,"color")) Reflect.setField(typeOptions,optionName,new phoenix_Color().rgb(Std.parseInt(val[0]))); else typeOptions[optionName] = val[0];
 		}
 	}
-	,__class__: mint_loaders_JSONLoader
+	return typeOptions;
+};
+mint_loaders_JSONLoader.TranslateTextAlign = function(align) {
+	switch(align) {
+	case "left":
+		return 1;
+	case "right":
+		return 2;
+	case "center":
+		return 1;
+	case "top":
+		return 4;
+	case "bottom":
+		return 5;
+	default:
+		return 0;
+	}
+};
+mint_loaders_JSONLoader.prototype = {
+	__class__: mint_loaders_JSONLoader
 };
 var mint_render_Renderer = function() { };
 $hxClasses["mint.render.Renderer"] = mint_render_Renderer;
@@ -25116,6 +25021,7 @@ mint_core_unifill_Unicode.minHighSurrogate = 55296;
 mint_core_unifill_Unicode.maxHighSurrogate = 56319;
 mint_core_unifill_Unicode.minLowSurrogate = 56320;
 mint_core_unifill_Unicode.maxLowSurrogate = 57343;
+mint_loaders_JSONLoader.unnamedControlIndices = new haxe_ds_StringMap();
 phoenix_Batcher._sequence_key = -1;
 phoenix_Texture.default_filter = 9729;
 phoenix_Texture.default_clamp = 33071;
