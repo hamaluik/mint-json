@@ -119,7 +119,7 @@ class JSONLoader {
 		var fieldNames:Array<String> = Reflect.fields(typeOptions);
 		for(mandatoryField in fieldNames) {
 			var suppliedValue = Reflect.field(options, mandatoryField);
-			if(suppliedValue == null) {
+			if(suppliedValue == null && OnMissingField != null) {
 				Reflect.setField(typeOptions, mandatoryField, OnMissingField(options.name, controlType, mandatoryField));
 			}
 		}
