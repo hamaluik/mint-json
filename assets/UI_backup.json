@@ -1,0 +1,40 @@
+{
+	"rendering": "luxe",
+	"layout": "margins",
+	"canvas": {
+		"options": {
+			"x": 10, "y": 10,
+			"w": 960, "h": 640
+		},
+		"controls": [
+			{
+				"label": {
+					"name": "Hello Mint Label",
+					"x": 10, "y": 10,
+					"w": 100, "h": 32,
+					"text": "Hello Mint!",
+					"text_size": 14,
+					"onclick": "clicked.label1",
+					"options": {
+						"color": "0xff0000",
+						"color_hover": "0xffffff"
+					}
+				}
+			},
+			{
+				"label": {
+					"x": 10, "y": 42,
+					"w": 100, "h": 32,
+					"text": "Herro!"
+				}
+			},
+			{
+				"button": {
+					"x": 10, "y": 75,
+					"w": 100, "h": 40,
+					"text": "This button does nothing."
+				}
+			}
+		]
+	}
+}
